@@ -72,9 +72,10 @@ The repository must support **two tracks**:
 - For any Fail, list diffs to fix
 
 ## File Selection Policy
-- I provide repo tree first.
-- You propose priority files (max 10).
-- We iterate to open/analyze them.
+- Codex can directly open and read files from the cloned repository.
+- You must not blindly scan everything: always ask me to confirm scope first.
+- For Step A, request the repo tree and propose the top priority files (max 10) to analyze first.
+- I will approve or adjust the list, then you open those files directly from the repo.
 
 ## Assumption Policy
 - If info is missing, list explicit assumptions.
@@ -85,3 +86,5 @@ The repository must support **two tracks**:
 - Use fenced code blocks with relative paths.
 - Code must compile with CMake and pass ctest.
 - Docs in Markdown, diagrams as plain text.
+- When you open files, print the relative path and short summary first, then the extracted content.
+- Always explain why each file is relevant to spec, architecture, or MVP sequencing.
