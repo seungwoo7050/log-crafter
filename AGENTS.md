@@ -27,7 +27,17 @@ The repository must support **two tracks**:
 - No internet browsing.  
 - Do not add third-party frameworks.  
 - Keep external API/contract unless I explicitly approve changes.  
-- All outputs must be compilable, testable, reproducible.
+- All outputs must be compilable, testable, reproducible.  
+- Legacy code may be opened and analyzed only during Step A.  
+- At the end of Step A, all legacy code must be **deleted**. From Step B onward, only the new structure (work/, snapshots/, docs/, tests/, scripts/, ci/) is in scope.  
+
+## Snapshot Policy
+- Active development occurs only in `work/{track}` (e.g., `work/c`, `work/cpp`).  
+- `work/{track}` always represents the latest evolving version.  
+- When an MVP passes build and tests in `work/{track}`, create a frozen snapshot under `snapshots/{track}/mvpX`.  
+- Each snapshot is a **full copy** of `work/{track}` at that stage (full copy or hardlink copy, no symlinks).  
+- Snapshots are excluded from builds, includes, and CI by default.  
+- The agent must never modify files inside `snapshots/`.  
 
 ## Deliverables
 **Step A: Specs + Diagrams**  
@@ -38,11 +48,14 @@ The repository must support **two tracks**:
 - Explicit assumptions  
 
 **Step B: Repository + Code**  
-- src/c/mvp0 … mvp5/  
-- src/cpp/mvp0 … mvp6/ (IRC extension in mvp6)  
+- work/c/ (ongoing dev for C track)  
+- work/cpp/ (ongoing dev for C++ track)  
+- snapshots/c/mvp0 … mvp5 (frozen snapshots)  
+- snapshots/cpp/mvp0 … mvp6 (frozen snapshots, IRC extension at mvp6)  
 - CMakeLists.txt with targets for both tracks  
-- scripts/new_version.sh, run_smoke.sh  
-- CHANGES.md per MVP with SEQ references  
+- scripts/new_version.sh, run_smoke.sh, snapshot_mvp.sh  
+- CHANGELOG.md and VERSIONING.md at root  
+- CHANGES.md updated per MVP with SEQ references  
 - All code headers annotated with SEQ  
 
 **Step C: Tests + CI**  
@@ -52,11 +65,12 @@ The repository must support **two tracks**:
 - All tests runnable via ctest  
 
 ## Versioning and Sequences
-- Global SEQ ids: SEQ0000, SEQ0001, … (no gaps, no duplicates)  
+- Global SEQ ids: SEQ0000, SEQ0001, … (no gaps, no duplicates).  
 - Both C and C++ tracks share the same global sequence space.  
-- MVP checkpoints remain. Each change ties to a SEQ.  
+- Each MVP snapshot is a full copy of `work/{track}` at that stage.  
+- Do not implement diff-only versions. Always carry forward the complete project state.  
 - Example header comment:  
-  ```c
+  ~~~c
   /*
    * Sequence: SEQ0012
    * Track: C++
@@ -64,27 +78,26 @@ The repository must support **two tracks**:
    * Change: introduce epoll accept loop and nonblocking sockets
    * Tests: smoke_bind_ok, spec_accept_backlog, integ_broadcast
    */
-   ```
+  ~~~  
 
 ## Review Protocol
-- Work in three batches: A, B, C
-- After each step, print checklist vs Deliverables → Pass/Fail
-- For any Fail, list diffs to fix
+- Work in three batches: A, B, C  
+- After each step, print checklist vs Deliverables → Pass/Fail  
+- For any Fail, list diffs to fix  
 
 ## File Selection Policy
-- Codex can directly open and read files from the cloned repository.
-- You must not blindly scan everything: always ask me to confirm scope first.
-- For Step A, request the repo tree and propose the top priority files (max 10) to analyze first.
-- I will approve or adjust the list, then you open those files directly from the repo.
+- Codex can open files directly from the cloned repo.  
+- Always ask for confirmation of file scope before opening.  
+- For Step A, request repo tree and propose top 10 files. Wait for my approval.  
 
 ## Assumption Policy
-- If info is missing, list explicit assumptions.
-- Do not invent new features outside the original plan.
-- If legacy C and C++ differ, document divergence explicitly in Migration.md.
+- If info is missing, list explicit assumptions.  
+- Do not invent new features outside the original plan.  
+- If legacy C and C++ differ, document divergence in Migration.md.  
 
 ## Output Format
-- Use fenced code blocks with relative paths.
-- Code must compile with CMake and pass ctest.
-- Docs in Markdown, diagrams as plain text.
-- When you open files, print the relative path and short summary first, then the extracted content.
-- Always explain why each file is relevant to spec, architecture, or MVP sequencing.
+- Use fenced code blocks with relative paths.  
+- For code examples inside docs, prefer `~~~` fences (e.g., ~~~c, ~~~bash) to avoid block breakage.  
+- Code must compile with CMake and pass ctest.  
+- All outputs must include build/run instructions and expected results.  
+- Docs in Markdown, diagrams as plain text.  
