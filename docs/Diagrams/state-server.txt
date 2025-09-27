@@ -1,0 +1,37 @@
+State Diagram – Server Lifecycle
+
+[INIT]
+  |
+  v
+[CONFIGURE PORTS]
+  - parse CLI
+  - load persistence config
+  |
+  v
+[INITIALIZE]
+  - create listeners
+  - spawn thread pool
+  - attach log buffer / persistence
+  |
+  v
+[RUNNING]
+  - select()/poll loop
+  - accept log clients -> dispatch jobs
+  - accept query clients -> handle inline or via pool
+  - (C++ MVP6) accept IRC clients -> delegate to IRCServer
+  |
+  +--> [SHUTDOWN REQUEST]
+           - signal handler flips running flag
+           - main loop drains jobs
+           - persistence flush
+           - IRC stops accepting
+           |
+           v
+       [TEARDOWN]
+           - join threads
+           - close sockets
+           - release resources
+           |
+           v
+         [STOPPED]
+

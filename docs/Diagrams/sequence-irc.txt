@@ -1,0 +1,20 @@
+Sequence Diagram – IRC Log Streaming (C++ MVP6)
+
+IRC Client        IRC Server        IRCChannelManager      LogBuffer
+    |                 |                   |                  |
+    |--connect------->|                   |                  |
+    |  NICK/USER      |                   |                  |
+    |---------------->|--auth complete--> |                  |
+    |<--welcome-------|                   |                  |
+    |--JOIN #logs-all-|------------------>|--ensure channel--|
+    |                 |                   |                  |
+    |                 |<--register cb-----|--register------->|
+    |                 |                   |                  |
+    |                 |  (await logs)     |                  |
+    |                 |                   |<--addLogNotify---|
+    |                 |<--broadcast log---|----------------->|
+    |<--PRIVMSG-------|                   |                  |
+    |                 |                   |                  |
+    |--!logstream off->|------------------|--disable filter--|
+    |                 |                   |                  |
+    |                 |<--ack------------ |                  |

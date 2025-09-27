@@ -1,0 +1,97 @@
+/*
+ * Sequence: SEQ0073
+ * Track: C++
+ * MVP: mvp6
+ * Change: Extend the server facade with IRC command wiring, server-name overrides, and channel statistics helpers.
+ * Tests: smoke_cpp_mvp6_irc
+ */
+#ifndef LOGCRAFTER_CPP_LC_SERVER_HPP
+#define LOGCRAFTER_CPP_LC_SERVER_HPP
+
+#include <atomic>
+#include <cstddef>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "irc_server.hpp"
+#include "log_buffer.hpp"
+#include "persistence.hpp"
+#include "query_parser.hpp"
+#include "thread_pool.hpp"
+
+namespace logcrafter::cpp {
+
+struct ServerConfig {
+    int log_port;
+    int query_port;
+    int max_pending_connections;
+    int select_timeout_ms;
+    std::size_t buffer_capacity;
+    int worker_threads;
+    bool persistence_enabled;
+    std::string persistence_directory;
+    std::size_t persistence_max_file_size;
+    std::size_t persistence_max_files;
+    bool irc_enabled;
+    int irc_port;
+    std::string irc_server_name;
+    std::vector<std::string> irc_auto_join;
+};
+
+ServerConfig default_config();
+
+class Server {
+public:
+    Server();
+
+    int init(const ServerConfig &config);
+    int run();
+    void request_stop();
+    void shutdown();
+
+    const ServerConfig &config() const { return config_; }
+
+    static constexpr std::size_t kMaxLogLength = 1024;
+    static constexpr std::size_t kDefaultLogCapacity = 10000;
+    static constexpr int kDefaultWorkerThreads = 4;
+    static constexpr const char *kDefaultPersistenceDirectory = "./logs";
+    static constexpr std::size_t kDefaultPersistenceMaxFileSize = 10 * 1024 * 1024;
+    static constexpr std::size_t kDefaultPersistenceMaxFiles = 10;
+    static constexpr int kDefaultIrcPort = 6667;
+    static constexpr const char *kDefaultIrcServerName = "logcrafter";
+
+private:
+    int create_listener(int port, int backlog);
+    void dispatch_log_client(int client_fd);
+    void dispatch_query_client(int client_fd);
+    void handle_log_client(int client_fd);
+    void handle_query_client(int client_fd);
+    void store_log(const std::string &message);
+    void send_help(int client_fd) const;
+    void send_count(int client_fd) const;
+    void send_stats(int client_fd) const;
+    void handle_query_command(int client_fd, const std::string &arguments) const;
+    void send_query_response(int client_fd, const QueryRequest &request) const;
+    void send_query_results(int client_fd, const std::vector<std::string> &results) const;
+    void send_error(int client_fd, const std::string &message) const;
+    std::string make_irc_stats_snapshot() const;
+
+    ServerConfig config_;
+    int log_listener_fd_;
+    int query_listener_fd_;
+    std::atomic<bool> running_;
+
+    ThreadPool thread_pool_;
+    LogBuffer log_buffer_;
+    PersistenceManager persistence_;
+    bool persistence_enabled_;
+    std::unique_ptr<IRCServer> irc_server_;
+    bool irc_enabled_;
+    std::atomic<int> active_log_clients_;
+    std::atomic<int> active_query_clients_;
+};
+
+} // namespace logcrafter::cpp
+
+#endif // LOGCRAFTER_CPP_LC_SERVER_HPP
