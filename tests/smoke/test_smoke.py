@@ -151,18 +151,41 @@ def smoke_max_clients() -> None:
     c_binary = binary_path("c")
     with ServerProcess(c_binary, "-c", "1") as server:
         server.wait_ready([9999, 9998])
-        primary_log = socket.create_connection(("127.0.0.1", 9999), timeout=1.0)
+
+        primary_log = None
+        for _ in range(3):
+            candidate = socket.create_connection(("127.0.0.1", 9999), timeout=1.0)
+            banner = candidate.recv(128).decode(errors="ignore")
+            if "capacity" in banner.lower():
+                candidate.close()
+                time.sleep(0.1)
+                continue
+            primary_log = candidate
+            break
+        if primary_log is None:
+            raise AssertionError("Unable to secure primary log connection for capacity test")
+
         try:
-            primary_log.recv(128)
             time.sleep(0.1)
             with socket.create_connection(("127.0.0.1", 9999), timeout=1.0) as secondary:
-                try:
-                    payload = secondary.recv(256)
-                except ConnectionResetError:
-                    payload = b""
-                message = payload.decode(errors="ignore")
-                if message:
-                    assert "capacity" in message.lower(), f"unexpected response: {message!r}"
+                transcript = []
+                secondary.settimeout(0.5)
+                deadline = time.monotonic() + 1.0
+                while time.monotonic() < deadline:
+                    try:
+                        chunk = secondary.recv(256)
+                    except ConnectionResetError:
+                        break
+                    except socket.timeout:
+                        continue
+                    if not chunk:
+                        break
+                    text = chunk.decode(errors="ignore")
+                    transcript.append(text)
+                    if "capacity" in text.lower():
+                        break
+                message = "".join(transcript)
+                assert "capacity" in message.lower(), f"unexpected response: {message!r}"
         finally:
             primary_log.close()
 

@@ -86,3 +86,13 @@
 ## SEQ0102–SEQ0104 – Step C CI workflow
 - Added the GitHub Actions pipeline that checks out the repo, configures CMake, builds all targets, and runs the entire `ctest` suite.
 - Documented the job sequence in `ci/README.md` so contributors understand the automated validation stages.
+
+## SEQ0105–SEQ0107 – Step C final validation
+- Published the Step C5 deliverables checklist summarising Pass status for planning docs, code foundations, and automation assets.
+- Added release collateral (`CHANGELOG.md`, `VERSIONING.md`) and documented the `scripts/new_version.sh` helper in the scripts index.
+- Implemented the `new_version.sh` tool to prepend dated entries to `CHANGELOG.md`, aligning with the repository versioning flow.
+
+## SEQ0108 – Step C CLI operations guide
+- Authored a comprehensive CLI reference covering build setup, test execution, runtime invocation, snapshotting, and release tooling workflows.
+- Captured troubleshooting advice for common terminal issues (ctest typos, port conflicts, stale build trees) to reduce friction for learners advancing through SEQ milestones.
+- Linked commands back to the supporting automation scripts so contributors can cross-reference behaviour with the implementation.
