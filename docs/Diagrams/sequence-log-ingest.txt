@@ -1,0 +1,15 @@
+Sequence Diagram – Log Ingestion with Persistence
+
+Client          Server (accept)      Thread Pool Worker        Log Buffer           Persistence
+  |                    |                      |                     |                      |
+  |---connect()------->|                      |                     |                      |
+  |                    |---accept fd--------->|                     |                      |
+  |                    |                      |---recv(log line)-->|                      |
+  |                    |                      |                     |                      |
+  |                    |                      |---push()---------->|                      |
+  |                    |                      |                     |---enqueue()-------->|
+  |                    |                      |                     |                      |
+  |                    |                      |<--success-----------|                      |
+  |                    |<--log handled--------|                     |                      |
+  |<--optional close---|                      |                     |                      |
+  |                    |                      |                     |                      |
